@@ -12,6 +12,7 @@ dotenv_1.default.config();
 //Register new user
 const registerUser = async (req, res, next) => {
     try {
+        console.log(req.body);
         const { name, email, password } = req.body;
         if (!email || !password) {
             return res.status(400).json({ message: "Email/Password is required" });

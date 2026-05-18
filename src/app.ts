@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import userRouter from "./routes/user";
 import jobRouter from "./routes/job";
+import { redisClient } from "./config/redis";
 import { errorHandler } from "./middleware/errorHandler";
 dotenv.config();
 
@@ -24,6 +25,17 @@ app.use(errorHandler);
 
 //Start Server
 const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`Server is running on PORT ${port}`);
-});
+const startServer = async () => {
+  try {
+    //connect redis
+    await redisClient.connect();
+    console.log("Redis Connected");
+    //start server
+    app.listen(port, () => {
+      console.log(`Server is running on PORT ${port}`);
+    });
+  } catch (error) {
+    console.log(`Failed to start server: ${error}`);
+  }
+};
+startServer();

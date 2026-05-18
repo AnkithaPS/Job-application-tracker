@@ -5,11 +5,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateJobs = exports.getJobs = exports.createJob = void 0;
 const db_1 = __importDefault(require("../config/db"));
+const redisService_1 = require("../services/redisService");
 //Create new job
 const createJob = async (req, res, next) => {
     try {
         const { company, position, salary, location, status, notes } = req.body;
-        const jobs = await db_1.default.query("INSERT INTO jobs(user_id,company,position,salary,location,status,notes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *", [req?.user?.id, company, position, salary, location, status, notes]);
+        const jobs = await db_1.default.query("INSERT INTO jobs(user_id,company,position,salary,location,status,notes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *", [
+            req?.user?.id,
+            company,
+            position,
+            salary,
+            location,
+            status ?? "Applied",
+            notes,
+        ]);
         res
             .status(201)
             .json({ message: "Job Created successfully!", data: jobs.rows[0] });
@@ -22,8 +31,13 @@ exports.createJob = createJob;
 //Fetch all job details of logged in user
 const getJobs = async (req, res, next) => {
     try {
-        const page = Number(req.query.page) || 1, limit = Number(req.querylimit) || 10;
+        const page = Number(req.query.page) || 1, limit = Number(req.query.limit) || 10;
         const offset = (page - 1) * limit;
+        const key = `jobs:${req.user.id}:page:${page}:limit:${limit}`;
+        const cached = await (0, redisService_1.getCache)(key);
+        if (cached) {
+            return res.status(200).json({ message: "Job details", cached });
+        }
         const jobs = await db_1.default.query("SELECT * from jobs WHERE user_id=$1 ORDER BY created_at DESC LIMIT $2 OFFSET $3 ", [req?.user?.id, limit, offset]);
         const jobsCount = await db_1.default.query("SELECT COUNT(*) from jobs WHERE user_id=$1", [req?.user?.id]);
         const data = {
@@ -35,6 +49,7 @@ const getJobs = async (req, res, next) => {
                 totalPages: Math.ceil(jobsCount.rows[0].count / limit),
             },
         };
+        await (0, redisService_1.setCache)(key, JSON.stringify(data));
         res.status(200).json({ message: "Job details", ...data });
     }
     catch (error) {
