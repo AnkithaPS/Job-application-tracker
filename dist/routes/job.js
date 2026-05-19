@@ -9,6 +9,7 @@ const job_1 = require("../controller/job");
 const redisRateLimit_1 = require("../middleware/redisRateLimit");
 const jobRouter = express_1.default.Router();
 jobRouter.post("/add", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.createJob);
-jobRouter.get("/find", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.getJobs);
+jobRouter.get("/findall", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.getJobs);
+jobRouter.get("/find", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.getJobSearch);
 jobRouter.patch("/:id/update", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.updateJobs);
 exports.default = jobRouter;

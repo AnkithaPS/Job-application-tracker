@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateJobs = exports.getJobs = exports.createJob = void 0;
+exports.updateJobs = exports.getJobSearch = exports.getJobs = exports.createJob = void 0;
 const db_1 = __importDefault(require("../config/db"));
 const redisService_1 = require("../services/redisService");
 //Create new job
@@ -57,6 +57,36 @@ const getJobs = async (req, res, next) => {
     }
 };
 exports.getJobs = getJobs;
+//Fetch job details based on search
+const getJobSearch = async (req, res, next) => {
+    try {
+        const { search } = req.query;
+        const page = Number(req.query.page) || 1, limit = Number(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const key = `jobs:${req.user.id}:search:${search}:page:${page}:limit:${limit}`;
+        const cached = await (0, redisService_1.getCache)(key);
+        if (cached) {
+            return res.status(200).json({ message: "Job details fetched.", cached });
+        }
+        const jobs = await db_1.default.query("SELECT * FROM jobs WHERE user_id=$1 AND (company ILIKE $2 OR status ILIKE $2 OR notes ILIKE $2) ORDER BY created_at DESC LIMIT $3 OFFSET $4", [req?.user?.id, `%${search}%`, limit, offset]);
+        const jobCounts = await db_1.default.query("SELECT COUNT(*) FROM jobs WHERE user_id=$1 AND (company ILIKE $2 OR status ILIKE $2 OR notes ILIKE $2) ", [req?.user?.id, `%${search}%`]);
+        const data = {
+            data: jobs.rows,
+            pagination: {
+                totalData: jobCounts.rows[0].count,
+                page: page,
+                limit: limit,
+                totalPages: Math.ceil(jobCounts.rows[0].count / limit),
+            },
+        };
+        await (0, redisService_1.setCache)(key, JSON.stringify(data));
+        res.status(200).json({ message: "Job details fetched.", ...data });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getJobSearch = getJobSearch;
 //Update job details
 const updateJobs = async (req, res, next) => {
     try {

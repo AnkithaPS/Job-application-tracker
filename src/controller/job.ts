@@ -1,3 +1,4 @@
+import { totalmem } from "node:os";
 import pool from "../config/db";
 import { getCache, setCache } from "../services/redisService";
 
@@ -55,6 +56,46 @@ export const getJobs = async (req: any, res: any, next: any) => {
     };
     await setCache(key, JSON.stringify(data));
     res.status(200).json({ message: "Job details", ...data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//Fetch job details based on search
+export const getJobSearch = async (req: any, res: any, next: any) => {
+  try {
+    const { search } = req.query;
+    const page = Number(req.query.page) || 1,
+      limit = Number(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const key = `jobs:${req.user.id}:search:${search}:page:${page}:limit:${limit}`;
+
+    const cached = await getCache(key);
+
+    if (cached) {
+      return res.status(200).json({ message: "Job details fetched.", cached });
+    }
+
+    const jobs = await pool.query(
+      "SELECT * FROM jobs WHERE user_id=$1 AND (company ILIKE $2 OR status ILIKE $2 OR notes ILIKE $2) ORDER BY created_at DESC LIMIT $3 OFFSET $4",
+      [req?.user?.id, `%${search}%`, limit, offset],
+    );
+
+    const jobCounts = await pool.query(
+      "SELECT COUNT(*) FROM jobs WHERE user_id=$1 AND (company ILIKE $2 OR status ILIKE $2 OR notes ILIKE $2) ",
+      [req?.user?.id, `%${search}%`],
+    );
+    const data = {
+      data: jobs.rows,
+      pagination: {
+        totalData: jobCounts.rows[0].count,
+        page: page,
+        limit: limit,
+        totalPages: Math.ceil(jobCounts.rows[0].count / limit),
+      },
+    };
+    await setCache(key, JSON.stringify(data));
+    res.status(200).json({ message: "Job details fetched.", ...data });
   } catch (error) {
     next(error);
   }

@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    container_name: job_tracker
+    ports:
+      - 5000:5000
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - .:/app
+      - /app/node_modules
+  redis:
+    image: "redis:7"
+    ports:
+      - 6379:6379
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ankitha58
+      POSTGRES_DB: job_tracker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
