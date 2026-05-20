@@ -10,6 +10,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
 const user_1 = __importDefault(require("./routes/user"));
 const job_1 = __importDefault(require("./routes/job"));
+const swagger_1 = require("./config/swagger");
 const redis_1 = require("./config/redis");
 const errorHandler_1 = require("./middleware/errorHandler");
 dotenv_1.default.config();
@@ -21,6 +22,8 @@ app.use((0, morgan_1.default)("dev"));
 //Routers
 app.use("/api/auth", user_1.default);
 app.use("/api/jobs", job_1.default);
+//swagger
+app.use("/api-docs", swagger_1.swaggerUi.serve, swagger_1.swaggerUi.setup(swagger_1.swaggerSpec));
 //Middleware error Handling
 app.use(errorHandler_1.errorHandler);
 //Start Server

@@ -1,4 +1,4 @@
-# 📌 Job Application Tracker API
+# Job Application Tracker API
 
 A production-ready backend system to track job applications with authentication, caching, rate limiting, and containerized deployment.
 
@@ -28,6 +28,7 @@ Built using Node.js + TypeScript + Express, PostgreSQL, Redis, JWT authenticatio
 - Redis (Cache + Rate Limiting)
 - JWT (Authentication)
 - Docker & Docker Compose
+- Swagger/OpenAPI
 
 ---
 
@@ -77,9 +78,9 @@ POST /api/auth/login
 
 # Jobs (Protected)
 
-POST /api/jobs/add
-GET /api/jobs/find?page=1&limit=10&search=google  
-GET /api/jobs/findall?page=1&limit=10
+POST /api/jobs?add
+GET /api/jobs?page=1&limit=10&search=google  
+GET /api/jobs?page=1&limit=10
 PUT /api/jobs/:id
 
 ---
@@ -222,6 +223,21 @@ npm start
 
 ---
 
+# API Documentation (Swagger)
+
+Open Swagger UI:
+
+http://localhost:5000/api-docs
+
+For protected APIs:
+
+- Login using /api/auth/login
+- Copy JWT token
+- Click Authorize in Swagger UI
+- Enter: <your_token>
+
+---
+
 # Highlights
 
 - JWT authentication
@@ -230,6 +246,7 @@ npm start
 - Rate limiting
 - PostgreSQL relational schema
 - Dockerized setup
+- Swagger/OpenAPI documentation
 
 ---
 
@@ -239,10 +256,10 @@ npm start
 - Resume upload
 - Role-based access (Admin/User)
 - Analytics dashboard
-- Swagger documentation
 
 ---
 
 # Author
 
-Backend project built using Node.js, TypeScript, PostgreSQL, Redis, and Docker.
+Backend project built using Node.js, TypeScript, PostgreSQL, Redis, and Docker,Swagger/OpenAPI
+.

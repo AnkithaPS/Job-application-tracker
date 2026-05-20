@@ -18,3 +18,4 @@ create table if not exists jobs(
     created_at timestamp default current_timestamp
 );
 create index idx_jobs_user_id on jobs(user_id);
+create index idx_jobs_search on jobs(company,status,notes);

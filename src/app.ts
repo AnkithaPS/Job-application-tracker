@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import userRouter from "./routes/user";
 import jobRouter from "./routes/job";
+import { swaggerSpec, swaggerUi } from "./config/swagger";
 import { redisClient } from "./config/redis";
 import { errorHandler } from "./middleware/errorHandler";
 dotenv.config();
@@ -19,7 +20,8 @@ app.use(morgan("dev"));
 //Routers
 app.use("/api/auth", userRouter);
 app.use("/api/jobs", jobRouter);
-
+//swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 //Middleware error Handling
 app.use(errorHandler);
 
