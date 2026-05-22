@@ -15,7 +15,7 @@ This API allows users to securely register and log in using JWT-based authentica
     },
     servers: [
       { url: "http://localhost:5000" },
-      { url: "https://ai-resume-analyzer-lmuy.onrender.com" },
+      { url: "https://job-application-tracker-qjbq.onrender.com" },
     ],
     tags: [{ name: "Authentication" }, { name: "Job Tracker" }],
     components: {
