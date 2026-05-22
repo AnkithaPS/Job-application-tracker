@@ -107,3 +107,23 @@ export const updateJobs = async (req: any, res: any, next: any) => {
     next(error);
   }
 };
+
+//delete job details
+export const deleteJob = async (req: any, res: any, next: any) => {
+  try {
+    const jobId = req.params.id;
+
+    if (!jobId) {
+      return res.status(400).json({ message: "Job ID is required!" });
+    }
+
+    const job = await pool.query(
+      "DELETE FROM jobs WHERE user_id=$1 AND id=$2 ",
+      [req?.user?.id, jobId],
+    );
+
+    res.status(200).json({ message: "Job deleted successfully!" });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateJobs = exports.getJobs = exports.createJob = void 0;
+exports.deleteJob = exports.updateJobs = exports.getJobs = exports.createJob = void 0;
 const db_1 = __importDefault(require("../config/db"));
 const redisService_1 = require("../services/redisService");
 //Create new job
@@ -94,3 +94,18 @@ const updateJobs = async (req, res, next) => {
     }
 };
 exports.updateJobs = updateJobs;
+//delete job details
+const deleteJob = async (req, res, next) => {
+    try {
+        const jobId = req.params.id;
+        if (!jobId) {
+            return res.status(400).json({ message: "Job ID is required!" });
+        }
+        const job = await db_1.default.query("DELETE FROM jobs WHERE user_id=$1 AND id=$2 ", [req?.user?.id, jobId]);
+        res.status(200).json({ message: "Job deleted successfully!" });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.deleteJob = deleteJob;

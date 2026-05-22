@@ -197,4 +197,43 @@ jobRouter.get("/", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.lim
  *                              example: Job id required
  */
 jobRouter.put("/:id", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.updateJobs);
+/**
+ * @swagger
+ * /api/jobs/{id}:
+ *    delete:
+ *     summary: Delete job details
+ *     tags: [Job Tracker]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        description: Job ID
+ *        schema:
+ *          type: integer
+ *          example: 1
+ *
+ *     responses:
+ *      200:
+ *        description: success
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *                  example: Job deleted successfully!
+ *
+ *      400:
+ *          description: Bad Request
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          message:
+ *                              type: string
+ *                              example: Job id required
+ */
+jobRouter.delete("/:id", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.deleteJob);
 exports.default = jobRouter;

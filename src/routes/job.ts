@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticateMiddleware } from "../middleware/authMiddleware";
-import { createJob, getJobs, updateJobs } from "../controller/job";
+import { createJob, getJobs, updateJobs, deleteJob } from "../controller/job";
 import { limit } from "../middleware/redisRateLimit";
 const jobRouter = express.Router();
 
@@ -199,5 +199,43 @@ jobRouter.get("/", authenticateMiddleware, limit, getJobs);
  */
 
 jobRouter.put("/:id", authenticateMiddleware, limit, updateJobs);
-
+/**
+ * @swagger
+ * /api/jobs/{id}:
+ *    delete:
+ *     summary: Delete job details
+ *     tags: [Job Tracker]
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        description: Job ID
+ *        schema:
+ *          type: integer
+ *          example: 1
+ *
+ *     responses:
+ *      200:
+ *        description: success
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *                  example: Job deleted successfully!
+ *
+ *      400:
+ *          description: Bad Request
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          message:
+ *                              type: string
+ *                              example: Job id required
+ */
+jobRouter.delete("/:id", authenticateMiddleware, limit, deleteJob);
 export default jobRouter;

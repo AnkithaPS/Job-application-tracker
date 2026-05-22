@@ -82,6 +82,7 @@ POST /api/jobs?add
 GET /api/jobs?page=1&limit=10&search=google  
 GET /api/jobs?page=1&limit=10
 PUT /api/jobs/:id
+DELETE /api/jobs/:id
 
 ---
 
