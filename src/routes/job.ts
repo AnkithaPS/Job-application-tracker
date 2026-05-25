@@ -1,6 +1,12 @@
 import express from "express";
 import { authenticateMiddleware } from "../middleware/authMiddleware";
-import { createJob, getJobs, updateJobs, deleteJob } from "../controller/job";
+import {
+  createJob,
+  getJobs,
+  jobAnalytic,
+  updateJobs,
+  deleteJob,
+} from "../controller/job";
 import { limit } from "../middleware/redisRateLimit";
 const jobRouter = express.Router();
 
@@ -55,20 +61,23 @@ const jobRouter = express.Router();
  *              type: object
  *              properties:
  *                message:
- *                  type: string
  *                  example: Job Created successfully!
  *                data:
- *                  type: object
  *                  example:
- *                    id: 4
- *                    company: Google
- *                    position: SDE
- *                    status: Applied
- *                    location: Bengaluru
- *                    salary: 2000000
- *                    user_id: 1
- *                    notes: Just Applied for company
- *                    created_at: 2026-05-20T09:16:58.681Z
+ *                    company:
+ *                      id: 4
+ *                      name: Google
+ *                      location: Bengaluru
+ *                      created_at: 2026-05-20T09:16:58.681Z
+ *                    jobs:
+ *                      id: 4
+ *                      status: Applied
+ *                      user_id: 1
+ *                      company_id: 4
+ *                      position: SDE
+ *                      salary: 2000000
+ *                      notes: Just Applied for company
+ *                      created_at: 2026-05-20T09:16:58.681Z
  */
 
 jobRouter.post("/", authenticateMiddleware, limit, createJob);
@@ -117,7 +126,7 @@ jobRouter.post("/", authenticateMiddleware, limit, createJob);
  *                  type: object
  *                  example:
  *                  - id: 4
- *                    company: Google
+ *                    company_name: Google
  *                    position: SDE
  *                    status: Applied
  *                    location: Bengaluru
@@ -159,7 +168,7 @@ jobRouter.get("/", authenticateMiddleware, limit, getJobs);
  *            properties:
  *              status:
  *                type: string
- *                example: Interviewed
+ *                example: Interview
  *              notes:
  *                type: string
  *                example: Interview is done on 20th May
@@ -178,7 +187,8 @@ jobRouter.get("/", authenticateMiddleware, limit, getJobs);
  *                  type: object
  *                  example:
  *                    id: 4
- *                    company: Google
+ *                    company_name: Google
+ *                    company_id: 1
  *                    position: SDE
  *                    status: Applied
  *                    location: Bengaluru
@@ -239,3 +249,31 @@ jobRouter.put("/:id", authenticateMiddleware, limit, updateJobs);
  */
 jobRouter.delete("/:id", authenticateMiddleware, limit, deleteJob);
 export default jobRouter;
+
+/**
+ * @swagger
+ * /api/jobs/analytics:
+ *    get:
+ *     summary: Job Analytics
+ *     tags: [Job Tracker]
+ *
+ *     responses:
+ *      200:
+ *        description: success
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *                  example: Job Analytics
+ *                data:
+ *                  type: object
+ *                  example:
+ *                  - status: Applied
+ *                    total: 2
+ *                  - status: Interview
+ *                    total: 2
+ */
+jobRouter.get("/analytics", authenticateMiddleware, limit, jobAnalytic);

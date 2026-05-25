@@ -81,6 +81,7 @@ POST /api/auth/login
 POST /api/jobs?add
 GET /api/jobs?page=1&limit=10&search=google  
 GET /api/jobs?page=1&limit=10
+GET /api/jobs/analytics
 PUT /api/jobs/:id
 DELETE /api/jobs/:id
 
@@ -94,6 +95,14 @@ AND (company ILIKE '%google%'
 OR status ILIKE '%google%'
 OR notes ILIKE '%google%'
 );
+
+---
+
+# Analytic Logic
+
+SELECT status, COUNT (\*) as total FROM jobs
+WHERE user_id=1
+GROUP BY status;
 
 ---
 
@@ -127,17 +136,30 @@ password varchar(200) not null,
 created_at timestamp default current_timestamp
 );
 
+create table if not exists companies(
+id serial primary key,
+name varchar(255) not null,
+location varchar(255) not null,
+created_at timestamp default current_timestamp,
+unique(name, location)
+
+);
+
 create table if not exists jobs(
 id serial primary key,
-company varchar(200) not null,
-position varchar(200) not null,
 status varchar(100) not null default 'Applied' ,
-location varchar(200),
-salary integer,
 user_id integer references users(id) on delete cascade,
+company_id integer references companies(id) ,
+position varchar(200) not null,
+salary integer,
 notes text,
 created_at timestamp default current_timestamp
 );
+
+create index idx_jobs_user_id on jobs(user_id);
+create index idx_jobs_search_status on jobs(status);
+create index idx_jobs_search_notes on jobs(notes);
+create index idx_companies_name on companies(name);
 
 ---
 
@@ -192,7 +214,8 @@ postgres_data:
 
 PORT=5000
 
-DB_HOST=postgres
+DB_HOST=postgres [for docker]
+DB_HOST=localhost [for local]
 DB_USER=postgres
 DB_PASSWORD=your_password
 DB_NAME=job_tracker

@@ -6,21 +6,25 @@ import { getCache, setCache } from "../services/redisService";
 export const createJob = async (req: any, res: any, next: any) => {
   try {
     const { company, position, salary, location, status, notes } = req.body;
-    const jobs = await pool.query(
-      "INSERT INTO jobs(user_id,company,position,salary,location,status,notes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *",
-      [
-        req?.user?.id,
-        company,
-        position,
-        salary,
-        location,
-        status ?? "Applied",
-        notes,
-      ],
+    const companies = await pool.query(
+      `
+      INSERT INTO companies(name,location) VALUES ($1,$2)
+      ON CONFLICT (name,location) 
+      DO UPDATE SET name= EXCLUDED.name
+      RETURNING *
+      `,
+      [company, location],
     );
-    res
-      .status(201)
-      .json({ message: "Job Created successfully!", data: jobs.rows[0] });
+    const companyId = companies.rows[0].id;
+    const jobs = await pool.query(
+      "INSERT INTO jobs(user_id,status,company_id,position,salary,notes) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
+      [req?.user?.id, status ?? "Applied", companyId, position, salary, notes],
+    );
+
+    res.status(201).json({
+      message: "Job Created successfully!",
+      data: { company: companies?.rows[0], job: jobs?.rows[0] },
+    });
   } catch (error) {
     next(error);
   }
@@ -41,9 +45,25 @@ export const getJobs = async (req: any, res: any, next: any) => {
         return res.status(200).json({ message: "Job details", cached });
       }
       jobs = await pool.query(
-        "SELECT * from jobs WHERE user_id=$1 ORDER BY created_at DESC LIMIT $2 OFFSET $3 ",
+        `
+        SELECT jobs.id,
+        jobs.user_id,
+        jobs.status,
+        jobs.position,
+        jobs.salary,
+        jobs.notes, 
+        jobs.created_at,
+        companies.name as company_name,
+        companies.location
+        from jobs 
+        inner join companies on jobs.company_id = companies.id
+        WHERE user_id=$1 
+        ORDER BY jobs.created_at DESC 
+        LIMIT $2 OFFSET $3 
+        `,
         [req?.user?.id, limit, offset],
       );
+      console.log("heee", jobs);
       jobCounts = await pool.query(
         "SELECT COUNT(*) from jobs WHERE user_id=$1",
         [req?.user?.id],
@@ -60,12 +80,34 @@ export const getJobs = async (req: any, res: any, next: any) => {
       }
       const searchQuery = `%${search}%`;
       jobs = await pool.query(
-        "SELECT * FROM jobs WHERE user_id=$1 AND (company ILIKE $2 OR status ILIKE $2 OR notes ILIKE $2) ORDER BY created_at DESC LIMIT $3 OFFSET $4",
+        `
+       SELECT jobs.id,
+        jobs.user_id,
+        jobs.status,
+        jobs.position,
+        jobs.salary,
+        jobs.notes, 
+        jobs.created_at,
+        companies.name as company_name,
+        companies.location
+        from jobs 
+        inner join companies on jobs.company_id = companies.id
+        WHERE user_id=$1 
+        AND (companies.name ILIKE $2 OR jobs.status ILIKE $2 OR jobs.notes ILIKE $2)
+        ORDER BY jobs.created_at DESC 
+        LIMIT $3 OFFSET $4
+        `,
         [req?.user?.id, searchQuery, limit, offset],
       );
 
       jobCounts = await pool.query(
-        "SELECT COUNT(*) FROM jobs WHERE user_id=$1 AND (company ILIKE $2 OR status ILIKE $2 OR notes ILIKE $2) ",
+        `
+        SELECT COUNT(*) 
+        FROM jobs 
+        inner join companies on jobs.company_id = companies.id
+        WHERE user_id=$1 
+        AND (companies.name ILIKE $2 OR jobs.status ILIKE $2 OR jobs.notes ILIKE $2)
+        `,
         [req?.user?.id, searchQuery],
       );
     }
@@ -86,6 +128,19 @@ export const getJobs = async (req: any, res: any, next: any) => {
   }
 };
 
+//job Analytics
+export const jobAnalytic = async (req: any, res: any, next: any) => {
+  try {
+    const analytic = await pool.query(
+      "SELECT status,COUNT(*) as total FROM jobs where user_id=$1 GROUP BY status",
+      [req?.user?.id],
+    );
+    res.status(200).json({ message: "Job Analytics", data: analytic.rows });
+  } catch (error) {
+    next(error);
+  }
+};
+
 //Update job details
 export const updateJobs = async (req: any, res: any, next: any) => {
   try {
@@ -97,7 +152,15 @@ export const updateJobs = async (req: any, res: any, next: any) => {
       });
     }
     const updateJob = await pool.query(
-      "UPDATE jobs SET status=COALESCE($1,status), notes=COALESCE($2,notes) WHERE id=$3 RETURNING * ",
+      `
+      UPDATE jobs 
+      SET status=COALESCE($1,status), 
+      notes=COALESCE($2,notes) 
+      FROM companies
+      WHERE jobs.company_id = companies.id
+      AND jobs.id = $3
+      RETURNING jobs.*, companies.name AS company_name, companies.location;
+      `,
       [status, notes, jobId],
     );
     res

@@ -58,20 +58,23 @@ const jobRouter = express_1.default.Router();
  *              type: object
  *              properties:
  *                message:
- *                  type: string
  *                  example: Job Created successfully!
  *                data:
- *                  type: object
  *                  example:
- *                    id: 4
- *                    company: Google
- *                    position: SDE
- *                    status: Applied
- *                    location: Bengaluru
- *                    salary: 2000000
- *                    user_id: 1
- *                    notes: Just Applied for company
- *                    created_at: 2026-05-20T09:16:58.681Z
+ *                    company:
+ *                      id: 4
+ *                      name: Google
+ *                      location: Bengaluru
+ *                      created_at: 2026-05-20T09:16:58.681Z
+ *                    jobs:
+ *                      id: 4
+ *                      status: Applied
+ *                      user_id: 1
+ *                      company_id: 4
+ *                      position: SDE
+ *                      salary: 2000000
+ *                      notes: Just Applied for company
+ *                      created_at: 2026-05-20T09:16:58.681Z
  */
 jobRouter.post("/", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.createJob);
 /**
@@ -118,7 +121,7 @@ jobRouter.post("/", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.li
  *                  type: object
  *                  example:
  *                  - id: 4
- *                    company: Google
+ *                    company_name: Google
  *                    position: SDE
  *                    status: Applied
  *                    location: Bengaluru
@@ -158,7 +161,7 @@ jobRouter.get("/", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.lim
  *            properties:
  *              status:
  *                type: string
- *                example: Interviewed
+ *                example: Interview
  *              notes:
  *                type: string
  *                example: Interview is done on 20th May
@@ -177,7 +180,8 @@ jobRouter.get("/", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.lim
  *                  type: object
  *                  example:
  *                    id: 4
- *                    company: Google
+ *                    company_name: Google
+ *                    company_id: 1
  *                    position: SDE
  *                    status: Applied
  *                    location: Bengaluru
@@ -237,3 +241,30 @@ jobRouter.put("/:id", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.
  */
 jobRouter.delete("/:id", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.deleteJob);
 exports.default = jobRouter;
+/**
+ * @swagger
+ * /api/jobs/analytics:
+ *    get:
+ *     summary: Job Analytics
+ *     tags: [Job Tracker]
+ *
+ *     responses:
+ *      200:
+ *        description: success
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *                  example: Job Analytics
+ *                data:
+ *                  type: object
+ *                  example:
+ *                  - status: Applied
+ *                    total: 2
+ *                  - status: Interview
+ *                    total: 2
+ */
+jobRouter.get("/analytics", authMiddleware_1.authenticateMiddleware, redisRateLimit_1.limit, job_1.jobAnalytic);
