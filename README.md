@@ -10,8 +10,8 @@ Built using Node.js + TypeScript + Express, PostgreSQL, Redis, JWT authenticatio
 
 - JWT Authentication (Register/Login)
 - Multi-user job tracking
-- CRUD for job applications
 - Search + Pagination
+- Job analytics
 - Redis caching for faster responses
 - Rate limiting using Redis
 - PostgreSQL relational database
@@ -251,7 +251,8 @@ npm start
 
 Open Swagger UI:
 
-http://localhost:5000/api-docs
+http://localhost:5000/api-docs [local]
+https://job-application-tracker-qjbq.onrender.com/api-docs [production]
 
 For protected APIs:
 
